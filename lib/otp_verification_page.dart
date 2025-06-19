@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'grant_permissions_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String phoneNumber;
@@ -143,6 +144,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 ),
                 onPressed: () {
                   // TODO: Verify OTP
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GrantPermissionsPage(),
+                    ),
+                  );
                 },
                 child: const Text(
                   'Sign In',
