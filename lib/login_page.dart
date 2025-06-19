@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'otp_verification_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -174,7 +175,19 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(vertical: 18),
                   ),
                   onPressed: () {
-                    // TODO: Send OTP
+                    String phone = _phoneController.text.trim();
+                    if (phone.length == 10 && RegExp(r'^\d{10}$').hasMatch(phone) && _agreed) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OTPVerificationPage(phoneNumber: phone),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid 10-digit phone number and agree to the terms.')),
+                      );
+                    }
                   },
                   child: const Text(
                     "Send OTP",
