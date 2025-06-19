@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
+import 'dart:async';
 
 void main() {
   runApp(const MyApp());
@@ -31,29 +32,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
-      home: const LoginPage(),
-    );
-  }
-}
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 260), // Adjust this value to move the logo up or down
-          Center(
-            child: Image.asset(
-              'assets/satya2_logo.png',
-              width: MediaQuery.of(context).size.width * 0.6,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ],
-      ),
+      home: const SplashScreen(),
     );
   }
 }
@@ -65,4 +44,29 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Image.asset(
+          'assets/satya2_logo.png',
+          width: MediaQuery.of(context).size.width * 0.6,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+}
