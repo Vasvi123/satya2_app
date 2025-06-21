@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'otp_verification_page.dart';
-import 'email_otp_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'grant_permissions_page.dart'; // For navigation after successful login
+import 'signup_page.dart'; // For navigation to the sign-up page
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -11,37 +12,58 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
-  bool _agreed = true;
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscureText = true;
 
-  Future<void> _sendOTP(String email) async {
+  Future<void> _loginUser() async {
     setState(() => _isLoading = true);
+    print('Login attempt for: ${_emailController.text.trim()}'); // Debugging line
 
-    bool success = await EmailOTPService.sendOTP(email);
-
-    if (!mounted) return;
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OTPVerificationPage(email: email),
-        ),
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to send OTP. Please check your credentials and network.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const GrantPermissionsPage()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: ${e.code} - ${e.message}'); // Debugging line
+      _showErrorSnackbar(e.message ?? 'An unknown error occurred.');
+    } catch (e) {
+      print('An unexpected error occurred during login: $e'); // Debugging line
+      _showErrorSnackbar('An unexpected error occurred. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  Future<void> _resetPassword() async {
+    if (_emailController.text.trim().isEmpty) {
+      _showErrorSnackbar('Please enter your email to reset your password.');
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
+      _showErrorSnackbar('Password reset link sent! Check your email.', isError: false);
+    } on FirebaseAuthException catch (e) {
+      _showErrorSnackbar(e.message ?? 'Failed to send reset link.');
+    }
+  }
+  
+  void _showErrorSnackbar(String message, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
   }
 
   @override
@@ -50,211 +72,129 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
+              Image.asset('assets/satya2_logo.png', height: 100),
+              const SizedBox(height: 48),
+              const Text(
+                'Welcome Back!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please sign in to continue',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+              const SizedBox(height: 48),
+              _buildTextField(
+                controller: _emailController,
+                hintText: 'Email Address',
+                icon: Icons.email_outlined,
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _passwordController,
+                hintText: 'Password',
+                icon: Icons.lock_outline,
+                obscureText: _obscureText,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
               Align(
-                alignment: Alignment.centerLeft,
-                child: Image.asset(
-                  'assets/satya2_logo.png',
-                  height: 150,
-                  width: 200,
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: _resetPassword,
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: Colors.deepOrange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-
-              // Card Container
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Heading and Image
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "Let's Get Started!",
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 14),
-                              Text(
-                                "Please enter your email address and we will send an OTP for verification",
-                                style: TextStyle(fontSize: 14, color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Image.asset(
-                          'assets/login_illustration.jpg',
-                          height: 60,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // Email input
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Icon(Icons.email_outlined, color: Colors.grey),
-                          ),
-                          Container(
-                            height: 32,
-                            width: 1.2,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                hintText: 'Enter your email address',
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(vertical: 18),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Terms & checkbox
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Checkbox(
-                          value: _agreed,
-                          onChanged: (val) {
-                            setState(() {
-                              _agreed = val ?? false;
-                            });
-                          },
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        Expanded(
-                          child: Wrap(
-                            children: [
-                              const Text("By Signing up, you agree to the "),
-                              GestureDetector(
-                                onTap: () {},
-                                child: const Text(
-                                  "Terms of Service",
-                                  style: TextStyle(color: Colors.blue),
-                                ),
-                              ),
-                              const Text(" and "),
-                              GestureDetector(
-                                onTap: () {},
-                                child: const Text(
-                                  "Privacy Policy",
-                                  style: TextStyle(color: Colors.blue),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 36),
-
-              // Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          String email = _emailController.text.trim();
-                          if (_isValidEmail(email) && _agreed) {
-                            _sendOTP(email);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Please enter a valid email and agree to the terms.')),
-                            );
-                          }
-                        },
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "Send OTP",
-                          style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
+                ),
+                onPressed: _isLoading ? null : _loginUser,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Login',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const SignUpPage()),
+                  );
+                },
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: const TextSpan(
+                    text: "Don't have an account? ",
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                    children: [
+                      TextSpan(
+                        text: 'Sign Up',
+                        style: TextStyle(
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 24),
-
-              // Bottom Text
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account? "),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(icon, color: Colors.grey),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
       ),
     );

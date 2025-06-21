@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'email_otp_service.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Still using for potential login after verification
 import 'grant_permissions_page.dart';
+import 'login_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String email;
@@ -41,36 +43,72 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     }
   }
 
-  Future<void> _verifyOTP() async {
+  void _verifyOTP() async {
     setState(() => _isVerifying = true);
 
-    String otp = _otpControllers.map((controller) => controller.text).join();
-    
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
-      );
-      setState(() => _isVerifying = false);
-      return;
-    }
+    final otp = _otpControllers.map((controller) => controller.text).join().trim();
+    final isValid = EmailOTPService.verifyOTP(widget.email, otp);
 
-    bool isValid = EmailOTPService.verifyOTP(widget.email, otp);
-    
-    if (mounted) {
-      setState(() => _isVerifying = false);
-      if (isValid) {
-        // Navigate to the permissions page on successful verification
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const GrantPermissionsPage()),
+    if (isValid) {
+      try {
+        // Attempt to create a new user
+        final randomPassword = const Uuid().v4();
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: widget.email,
+          password: randomPassword,
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid OTP. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+
+        // Send a password-setting email to the new user
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: widget.email);
+        
+        _showSnackBar('Account created! Check your email to set your password.', Colors.green);
+
+        // Navigate to the permissions page
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const GrantPermissionsPage()),
+          );
+        }
+
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          // If user exists, send a password reset email instead
+          await FirebaseAuth.instance.sendPasswordResetEmail(email: widget.email);
+          _showSnackBar('Welcome back! A password reset link has been sent to your email.', Colors.blue);
+          if (mounted) {
+            // Navigate back to login page
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+              (route) => false,
+            );
+          }
+        } else {
+          // Handle other Firebase errors
+          _showSnackBar('An error occurred: ${e.message}', Colors.red);
+        }
+      } catch (e) {
+        // Handle non-Firebase errors
+        print('An unexpected error occurred: $e');
+        _showSnackBar('An unexpected error occurred. Please try again.', Colors.red);
+      } finally {
+        if (mounted) {
+          setState(() => _isVerifying = false);
+        }
       }
+    } else {
+      _showSnackBar('Invalid OTP. Please try again.', Colors.red);
+      setState(() => _isVerifying = false);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+        ),
+      );
     }
   }
 
