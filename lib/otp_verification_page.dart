@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'email_otp_service.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Still using for potential login after verification
 import 'grant_permissions_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
-  final String phoneNumber;
-  const OTPVerificationPage({Key? key, required this.phoneNumber}) : super(key: key);
+  final String email;
+
+  const OTPVerificationPage({
+    Key? key,
+    required this.email,
+  }) : super(key: key);
 
   @override
   State<OTPVerificationPage> createState() => _OTPVerificationPageState();
@@ -11,9 +17,10 @@ class OTPVerificationPage extends StatefulWidget {
 
 class _OTPVerificationPageState extends State<OTPVerificationPage> {
   final List<TextEditingController> _otpControllers =
-      List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+      List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isResending = false;
+  bool _isVerifying = false;
 
   @override
   void dispose() {
@@ -27,31 +34,83 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   }
 
   void _onOtpChanged(int index, String value) {
-    if (value.length == 1 && index < 3) {
+    if (value.length == 1 && index < 5) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
   }
 
-  void _resendOtp() async {
+  Future<void> _verifyOTP() async {
+    setState(() => _isVerifying = true);
+
+    String otp = _otpControllers.map((controller) => controller.text).join();
+    
+    if (otp.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
+      );
+      setState(() => _isVerifying = false);
+      return;
+    }
+
+    bool isValid = EmailOTPService.verifyOTP(widget.email, otp);
+    
+    if (mounted) {
+      setState(() => _isVerifying = false);
+      if (isValid) {
+        // Navigate to the permissions page on successful verification
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const GrantPermissionsPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid OTP. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _resendOtp() async {
     setState(() => _isResending = true);
-    await Future.delayed(const Duration(seconds: 2)); // Simulate resend
-    setState(() => _isResending = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP resent!')),
-    );
+    
+    bool success = await EmailOTPService.sendOTP(widget.email);
+    
+    if (mounted) {
+      setState(() => _isResending = false);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP resent successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to resend OTP. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    String maskedNumber = widget.phoneNumber.replaceRange(2, 8, '******');
+    String maskedEmail = widget.email.replaceRange(3, widget.email.indexOf('@'), '******');
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -59,12 +118,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
-            Image.asset('assets/satya2_logo.png', height: 150),
+            Image.asset('assets/satya2_logo.png', height: 60),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 255, 255, 255),
+                color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -74,7 +133,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     children: [
                       const Expanded(
                         child: Text(
-                          'Mobile Verification',
+                          'Email Verification',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -89,15 +148,15 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'We will auto-detect a SMS sent to your mobile number $maskedNumber',
+                    'We have sent a 6-digit verification code to your email $maskedEmail',
                     style: const TextStyle(fontSize: 14, color: Colors.black54),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(4, (i) {
+                    children: List.generate(6, (i) {
                       return SizedBox(
-                        width: 60,
+                        width: 48,
                         child: TextField(
                           controller: _otpControllers[i],
                           focusNode: _focusNodes[i],
@@ -110,12 +169,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                             filled: true,
                             fillColor: Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Colors.grey, width: 3),
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.grey),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Colors.deepOrange, width: 3),
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.deepOrange),
                             ),
                           ),
                           onChanged: (val) => _onOtpChanged(i, val),
@@ -125,7 +184,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "If the code hasn't been retrieved automatically, please enter the code manually",
+                    "If you haven't received the code, please check your spam folder.",
                     style: TextStyle(fontSize: 13, color: Colors.black54),
                   ),
                 ],
@@ -142,19 +201,20 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  // TODO: Verify OTP
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const GrantPermissionsPage(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
+                onPressed: _isVerifying ? null : _verifyOTP,
+                child: _isVerifying
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Verify Email',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
             const SizedBox(height: 16),

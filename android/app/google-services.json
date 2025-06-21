@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620846553089",
+    "project_id": "satya2-app",
+    "storage_bucket": "satya2-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620846553089:android:a3c3b15d14aa0c514a0800",
+        "android_client_info": {
+          "package_name": "com.example.satya2_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCc0LcfvW0qHhICp3uOopMgsNftGefi_zA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

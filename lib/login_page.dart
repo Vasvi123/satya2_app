@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'otp_verification_page.dart';
+import 'email_otp_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -9,8 +10,39 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   bool _agreed = true;
+  bool _isLoading = false;
+
+  Future<void> _sendOTP(String email) async {
+    setState(() => _isLoading = true);
+
+    bool success = await EmailOTPService.sendOTP(email);
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OTPVerificationPage(email: email),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to send OTP. Please check your credentials and network.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +63,6 @@ class _LoginPageState extends State<LoginPage> {
                   width: 200,
                 ),
               ),
-
-              
 
               // Card Container
               Container(
@@ -61,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               SizedBox(height: 14),
                               Text(
-                                "Please enter your mobile number and we will send an OTP for verification",
+                                "Please enter your email address and we will send an OTP for verification",
                                 style: TextStyle(fontSize: 14, color: Colors.black54),
                               ),
                             ],
@@ -77,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 28),
 
-                    // Phone input
+                    // Email input
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -94,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('+91', style: TextStyle(fontSize: 16)),
+                            child: Icon(Icons.email_outlined, color: Colors.grey),
                           ),
                           Container(
                             height: 32,
@@ -104,11 +134,10 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.number,
-                              maxLength: 10,
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
                               decoration: const InputDecoration(
-                                counterText: '',
+                                hintText: 'Enter your email address',
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(vertical: 18),
                               ),
@@ -174,25 +203,36 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                   ),
-                  onPressed: () {
-                    String phone = _phoneController.text.trim();
-                    if (phone.length == 10 && RegExp(r'^\d{10}$').hasMatch(phone) && _agreed) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OTPVerificationPage(phoneNumber: phone),
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          String email = _emailController.text.trim();
+                          if (_isValidEmail(email) && _agreed) {
+                            _sendOTP(email);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Please enter a valid email and agree to the terms.')),
+                            );
+                          }
+                        },
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Send OTP",
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
                         ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a valid 10-digit phone number and agree to the terms.')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    "Send OTP",
-                    style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
                 ),
               ),
 

@@ -1,111 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class GrantPermissionsPage extends StatelessWidget {
   const GrantPermissionsPage({Key? key}) : super(key: key);
+
+  Future<void> _requestPermissions(BuildContext context) async {
+    // Request multiple permissions at once
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.camera,
+      Permission.photos, // For photo access
+      Permission.videos, // For video access
+    ].request();
+
+    // Check the status of each permission
+    final locationStatus = statuses[Permission.location];
+    final cameraStatus = statuses[Permission.camera];
+    final photosStatus = statuses[Permission.photos];
+    final videosStatus = statuses[Permission.videos];
+
+    // On modern Android, videos and photos are often granted together.
+    // We'll consider it a success if both are granted, or if one is granted and the other is not applicable.
+    if (locationStatus == PermissionStatus.granted &&
+        cameraStatus == PermissionStatus.granted &&
+        (photosStatus == PermissionStatus.granted || photosStatus == PermissionStatus.limited) &&
+        (videosStatus == PermissionStatus.granted || videosStatus == PermissionStatus.limited)) {
+      // All permissions granted, navigate to the main app screen
+      _showSnackBar(context, 'All permissions granted!', Colors.green);
+      // TODO: Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      // Handle the case where some permissions were denied
+      _showSnackBar(context, 'Some permissions were denied. Please grant all permissions to continue.', Colors.orange);
+      // Optionally, open app settings to let the user grant them manually
+      // openAppSettings();
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 0, top: 0),
-                  child: Image.asset(
-                    'assets/satya2_logo.png',
-                    height: 180,
-                  ),
-                ),
+              Image.asset('assets/satya2_logo.png', height: 80),
+              const SizedBox(height: 40),
+              const Text(
+                'Permissions Required',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              Container(
+              const SizedBox(height: 20),
+              const Text(
+                'To provide you with the best experience, we need access to your device\'s location, camera, and storage.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+              const SizedBox(height: 40),
+              _buildPermissionItem(Icons.location_on, 'Location', 'For location-based services.'),
+              _buildPermissionItem(Icons.camera_alt, 'Camera', 'To capture photos and videos.'),
+              _buildPermissionItem(Icons.photo_library, 'Photos & Videos', 'To save and access media.'),
+              const Spacer(),
+              SizedBox(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 245, 244, 244),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.black),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Grant Permissions',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'To build your comprehensive credit risk assessment and credit profile and facilitate quicker loan disbursal, we require the following permissions from you:',
-                      style: TextStyle(fontSize: 15, color: Color.fromARGB(255, 88, 87, 87),fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Icon(Icons.location_on, color: Color.fromARGB(255, 29, 28, 28)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            "To give you the best possible experience, we need access to your device's location. This allows us to show relevant content, services, and features based on where you are. Your location data helps us personalize recommendations and improve the accuracy of our services. We respect your privacy and only use your location with your permission.",
-                            style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.5),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Icon(Icons.sms, color: Color.fromARGB(255, 35, 35, 35)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Needs SMS access to read transaction-related messages so we can help you track your expenses, categorize purchases, and provide financial insights. We do not access personal conversations or share your data with third parties. All information is processed securely on your device.',
-                            style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.5 ,fontWeight: FontWeight.normal),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                  onPressed: () => _requestPermissions(context),
+                  child: const Text(
+                    'Grant Permissions',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionItem(IconData icon, String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.deepOrange, size: 40),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
