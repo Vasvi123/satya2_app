@@ -58,38 +58,60 @@ class GrantPermissionsPage extends StatelessWidget {
             children: [
               Image.asset('assets/satya2_logo.png', height: 80),
               const SizedBox(height: 40),
-              const Text(
+              Text(
                 'Permissions Required',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple[700],
+                ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'To provide you with the best experience, we need access to your device\'s location, camera, and storage.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 40),
-              _buildPermissionItem(Icons.location_on, 'Location', 'For location-based services.'),
-              _buildPermissionItem(Icons.camera_alt, 'Camera', 'To capture photos and videos.'),
-              _buildPermissionItem(Icons.photo_library, 'Photos & Videos', 'To save and access media.'),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => _requestPermissions(context),
-                  child: const Text(
-                    'Grant Permissions',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'For the best experience, please grant the following permissions:',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
                   ),
                 ),
               ),
+              const SizedBox(height: 32),
+              _buildPermissionItem(
+                icon: Icons.location_on,
+                title: 'Location',
+                subtitle: 'To provide location-based services.',
+                color: Colors.blueAccent,
+              ),
+              _buildPermissionItem(
+                icon: Icons.camera_alt,
+                title: 'Camera',
+                subtitle: 'To capture photos and videos.',
+                color: Colors.blueAccent,
+              ),
+              _buildPermissionItem(
+                icon: Icons.photo_library,
+                title: 'Photos & Videos',
+                subtitle: 'To access your media library.',
+                color: Colors.blueAccent,
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: () => _requestPermissions(context),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Grant Permissions',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -97,25 +119,20 @@ class GrantPermissionsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPermissionItem(IconData icon, String title, String subtitle) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.deepOrange, size: 40),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 14, color: Colors.black54)),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildPermissionItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 25,
+        backgroundColor: color.withOpacity(0.1),
+        child: Icon(icon, size: 28, color: color),
       ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[600])),
     );
   }
 } 

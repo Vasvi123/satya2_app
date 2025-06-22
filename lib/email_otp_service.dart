@@ -24,10 +24,10 @@ class EmailOTPService {
     final smtpServer = gmail(_username, _password);
 
     final message = Message()
-      ..from = Address(_username, 'Satya2 App')
+      ..from = Address(_username, 'KYCsaathi')
       ..recipients.add(email)
       ..subject = 'Your OTP Code'
-      ..text = 'Your OTP for Satya2 App is: $otp\nThis code is valid for 10 minutes.';
+      ..text = 'Your OTP for KYCsaathi is: $otp\nThis code is valid for 10 minutes.';
 
     try {
       final sendReport = await send(message, smtpServer);

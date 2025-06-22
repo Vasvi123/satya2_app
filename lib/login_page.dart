@@ -79,16 +79,23 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Image.asset('assets/satya2_logo.png', height: 100),
               const SizedBox(height: 48),
-              const Text(
-                'Welcome Back!',
+              Text(
+                "Welcome Back!",
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple[700],
+                ),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Please sign in to continue',
+              const SizedBox(height: 10),
+              Text(
+                "Login to your account",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                ),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 48),
               _buildTextField(
@@ -119,11 +126,11 @@ class _LoginPageState extends State<LoginPage> {
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: _resetPassword,
-                  child: const Text(
+                  child: Text(
                     'Forgot Password?',
                     style: TextStyle(
-                      color: Colors.deepOrange,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple[700],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -131,8 +138,8 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 36),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -154,14 +161,16 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: RichText(
                   textAlign: TextAlign.center,
-                  text: const TextSpan(
-                    text: "Don't have an account? ",
-                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  text: TextSpan(
                     children: [
+                      TextSpan(
+                        text: "Don't have an account? ",
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                      ),
                       TextSpan(
                         text: 'Sign Up',
                         style: TextStyle(
-                          color: Colors.deepOrange,
+                          color: Colors.blueAccent,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

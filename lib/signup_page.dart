@@ -60,9 +60,30 @@ class _SignUpPageState extends State<SignUpPage> {
                 alignment: Alignment.centerLeft,
                 child: Image.asset(
                   'assets/satya2_logo.png',
-                  height: 150,
-                  width: 200,
+                  height: 100,
                 ),
+              ),
+
+              const SizedBox(height: 30),
+
+              Text(
+                "Create your Account",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple[700],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Text(
+                "Enter your email to get started",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
               ),
 
               // Card Container
@@ -75,39 +96,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Heading and Image
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "Let's Get Started!",
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 14),
-                              Text(
-                                "Please enter your email address and we will send an OTP for verification",
-                                style: TextStyle(fontSize: 14, color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Image.asset(
-                          'assets/login_illustration.jpg',
-                          height: 60,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 28),
-
                     // Email input
                     Container(
                       decoration: BoxDecoration(
@@ -198,8 +186,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -231,7 +218,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Send OTP',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 16),
                         ),
                 ),
               ),
@@ -244,14 +231,14 @@ class _SignUpPageState extends State<SignUpPage> {
                   );
                 },
                 child: RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     text: "Already have an account? ",
-                    style: TextStyle(color: Colors.black, fontSize: 16),
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
                     children: [
                       TextSpan(
                         text: 'Login',
                         style: TextStyle(
-                          color: Colors.deepOrange,
+                          color: Colors.deepPurple[700]!,
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline,
                         ),

@@ -18,10 +18,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Satya2 App',
+      title: 'KYCsaathi',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[50],
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          primary: Colors.deepPurple,
+          secondary: Colors.blueAccent,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white, // Button text color
+            backgroundColor: Colors.deepPurple, // Button background color
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.deepPurple, // Text button color
+          ),
+        ),
       ),
       home: const SplashScreen(),
     );

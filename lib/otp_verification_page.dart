@@ -143,12 +143,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        title: const Text("Verify Email"),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -212,7 +210,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Colors.deepOrange),
+                              borderSide: BorderSide(color: Colors.deepPurple[700]!),
                             ),
                           ),
                           onChanged: (val) => _onOtpChanged(i, val),
