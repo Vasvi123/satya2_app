@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'loan_type_selection_page.dart';
 class GrantPermissionsPage extends StatelessWidget {
   const GrantPermissionsPage({Key? key}) : super(key: key);
 
@@ -27,7 +27,9 @@ class GrantPermissionsPage extends StatelessWidget {
         (videosStatus == PermissionStatus.granted || videosStatus == PermissionStatus.limited)) {
       // All permissions granted, navigate to the main app screen
       _showSnackBar(context, 'All permissions granted!', Colors.green);
-      // TODO: Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoanTypeSelectionPage()),
+      );
     } else {
       // Handle the case where some permissions were denied
       _showSnackBar(context, 'Some permissions were denied. Please grant all permissions to continue.', Colors.orange);
