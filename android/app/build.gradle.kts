@@ -28,7 +28,7 @@ fun getFlutterVersionName(): String {
 
 android {
     namespace = "com.example.satya2_app"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -50,7 +50,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 35
         versionCode = getFlutterVersionCode()
         versionName = getFlutterVersionName()
     }

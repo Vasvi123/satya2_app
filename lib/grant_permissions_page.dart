@@ -1,40 +1,98 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'loan_type_selection_page.dart';
-class GrantPermissionsPage extends StatelessWidget {
-  const GrantPermissionsPage({Key? key}) : super(key: key);
+import 'dart:io';
 
-  Future<void> _requestPermissions(BuildContext context) async {
-    // Request multiple permissions at once
-    Map<Permission, PermissionStatus> statuses = await [
+class GrantPermissionsPage extends StatefulWidget {
+  const GrantPermissionsPage({super.key});
+
+  @override
+  State<GrantPermissionsPage> createState() => _GrantPermissionsPageState();
+}
+
+class _GrantPermissionsPageState extends State<GrantPermissionsPage> {
+  bool showStorage = false;
+  int sdkInt = 33; // Default for emulator; use device_info_plus for real version
+
+  @override
+  void initState() {
+    super.initState();
+    // Optionally, use device_info_plus to get real SDK version
+    // setState(() { sdkInt = ... });
+    if (Platform.isAndroid && sdkInt < 30) {
+      showStorage = true;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // On page load, if all permissions are already granted, skip to main app
+    _checkAndSkipIfPermissionsGranted();
+  }
+
+  Future<void> _checkAndSkipIfPermissionsGranted() async {
+    List<Permission> permissions = [
       Permission.location,
       Permission.camera,
-      Permission.photos, // For photo access
-      Permission.videos, // For video access
-    ].request();
-
-    // Check the status of each permission
+      Permission.photos,
+      Permission.videos,
+    ];
+    if (showStorage) {
+      permissions.add(Permission.storage);
+    }
+    Map<Permission, PermissionStatus> statuses = await permissions.request();
     final locationStatus = statuses[Permission.location];
     final cameraStatus = statuses[Permission.camera];
     final photosStatus = statuses[Permission.photos];
     final videosStatus = statuses[Permission.videos];
-
-    // On modern Android, videos and photos are often granted together.
-    // We'll consider it a success if both are granted, or if one is granted and the other is not applicable.
+    final storageStatus = statuses[Permission.storage];
     if (locationStatus == PermissionStatus.granted &&
         cameraStatus == PermissionStatus.granted &&
         (photosStatus == PermissionStatus.granted || photosStatus == PermissionStatus.limited) &&
-        (videosStatus == PermissionStatus.granted || videosStatus == PermissionStatus.limited)) {
+        (videosStatus == PermissionStatus.granted || videosStatus == PermissionStatus.limited) &&
+        (!showStorage || storageStatus == PermissionStatus.granted)) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoanTypeSelectionPage()),
+        );
+      });
+    }
+  }
+
+  Future<void> _requestPermissions(BuildContext context) async {
+    List<Permission> permissions = [
+      Permission.location,
+      Permission.camera,
+      Permission.photos, // For photo access
+      Permission.videos, // For video access
+    ];
+    if (showStorage) {
+      permissions.add(Permission.storage);
+    }
+    Map<Permission, PermissionStatus> statuses = await permissions.request();
+
+    final locationStatus = statuses[Permission.location];
+    final cameraStatus = statuses[Permission.camera];
+    final photosStatus = statuses[Permission.photos];
+    final videosStatus = statuses[Permission.videos];
+    final storageStatus = statuses[Permission.storage];
+
+    if (locationStatus == PermissionStatus.granted &&
+        cameraStatus == PermissionStatus.granted &&
+        (photosStatus == PermissionStatus.granted || photosStatus == PermissionStatus.limited) &&
+        (videosStatus == PermissionStatus.granted || videosStatus == PermissionStatus.limited) &&
+        (!showStorage || storageStatus == PermissionStatus.granted)) {
       // All permissions granted, navigate to the main app screen
       _showSnackBar(context, 'All permissions granted!', Colors.green);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoanTypeSelectionPage()),
-      );
+      Future.delayed(const Duration(milliseconds: 500), () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoanTypeSelectionPage()),
+        );
+      });
     } else {
       // Handle the case where some permissions were denied
       _showSnackBar(context, 'Some permissions were denied. Please grant all permissions to continue.', Colors.orange);
-      // Optionally, open app settings to let the user grant them manually
-      // openAppSettings();
     }
   }
 
@@ -99,6 +157,13 @@ class GrantPermissionsPage extends StatelessWidget {
                 subtitle: 'To access your media library.',
                 color: Colors.blueAccent,
               ),
+              if (showStorage)
+                _buildPermissionItem(
+                  icon: Icons.folder,
+                  title: 'Storage',
+                  subtitle: 'To access and upload documents from your device.',
+                  color: Colors.blueAccent,
+                ),
               const Spacer(),
               ElevatedButton(
                 onPressed: () => _requestPermissions(context),

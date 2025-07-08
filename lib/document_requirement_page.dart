@@ -138,7 +138,10 @@ class DocumentRequirementPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DocumentUploadPage(requiredDocs: requiredDocs),
+                      builder: (context) => DocumentUploadPage(
+                        requiredDocs: requiredDocs,
+                        loanType: loanType,
+                      ),
                     ),
                   );
                 },

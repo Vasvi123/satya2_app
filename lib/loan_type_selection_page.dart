@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'document_requirement_page.dart';
+import 'document_management_page.dart';
 
 class LoanTypeSelectionPage extends StatefulWidget {
   const LoanTypeSelectionPage({Key? key}) : super(key: key);
@@ -28,6 +29,20 @@ class _LoanTypeSelectionPageState extends State<LoanTypeSelectionPage> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.folder),
+            tooltip: 'Manage Documents',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DocumentManagementPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         color: Colors.grey[100],
