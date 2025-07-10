@@ -96,26 +96,57 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : IconButton(
-                            icon: Icon(
-                              isUploaded ? Icons.visibility : Icons.upload_file,
-                              color: isUploaded ? Colors.blue : Colors.deepPurple,
-                            ),
-                            onPressed: isLoading[docName] == true ? null : () {
-                              if (isUploaded) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DocumentViewerPage(
-                                      documentUrl: uploadedDocuments[docName]!,
-                                      documentName: docName,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                _uploadDocument(docName);
-                              }
-                            },
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isUploaded) ...[
+                                IconButton(
+                                  icon: const Icon(Icons.visibility, color: Colors.blue),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DocumentViewerPage(
+                                          documentUrl: uploadedDocuments[docName]!,
+                                          documentName: docName,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  tooltip: 'View',
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.refresh, color: Colors.orange),
+                                  onPressed: () {
+                                    _uploadDocument(docName); // Replace: re-upload
+                                  },
+                                  tooltip: 'Replace',
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      uploadedDocuments.remove(docName);
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('$docName removed.'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  },
+                                  tooltip: 'Remove',
+                                ),
+                              ] else ...[
+                                IconButton(
+                                  icon: const Icon(Icons.upload_file, color: Colors.deepPurple),
+                                  onPressed: () {
+                                    _uploadDocument(docName);
+                                  },
+                                  tooltip: 'Upload',
+                                ),
+                              ]
+                            ],
                           ),
                     ),
                   );
